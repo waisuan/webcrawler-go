@@ -31,7 +31,7 @@ func (f *Fetcher) Fetch(rawTargetUrl string) ([]string, error) {
 		return nil, err
 	}
 
-	return f.parseAllUrls(content, targetUrl)
+	return f.parseAllUrls(content, targetUrl), nil
 }
 
 func (f *Fetcher) getHtmlContent(u string) (string, error) {
@@ -53,7 +53,7 @@ func (f *Fetcher) getHtmlContent(u string) (string, error) {
 	return html.UnescapeString(string(content)), err
 }
 
-func (f *Fetcher) parseAllUrls(htmlContent string, targetUrl *url.URL) ([]string, error) {
+func (f *Fetcher) parseAllUrls(htmlContent string, targetUrl *url.URL) []string {
 	targetHostname := strings.TrimPrefix(targetUrl.Hostname(), "www.")
 
 	// Search based on the anchor tags in the HTML body.
@@ -82,11 +82,11 @@ func (f *Fetcher) parseAllUrls(htmlContent string, targetUrl *url.URL) ([]string
 		}
 	}
 
-	// Dedup found URLs.
+	// Dedup matched URLs.
 	uniqueUrls := make([]string, 0)
 	for u := range foundUrls {
 		uniqueUrls = append(uniqueUrls, u)
 	}
 
-	return uniqueUrls, nil
+	return uniqueUrls
 }

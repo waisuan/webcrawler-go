@@ -47,5 +47,5 @@ func (f MockFetcher) Fetch(targetUrl string) ([]string, error) {
 		return res.urls, nil
 	}
 
-	return nil, fmt.Errorf("not found: %s", targetUrl)
+	return nil, fmt.Errorf("cannot parse any urls from: %s", targetUrl)
 }

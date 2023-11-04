@@ -1,10 +1,14 @@
 package crawler
 
 import (
+	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"webcrawler-go/internal/fetcher"
 )
+
+const MaxVisitingUrlsToPrint = 20
 
 type Crawler struct {
 	fetcher fetcher.IFetcher
@@ -25,13 +29,25 @@ func (c *Crawler) Run(url string) {
 		return
 	}
 
+	log.Printf("visited: %s\n", url)
+
 	urls, err := c.fetcher.Fetch(url)
 	if err != nil {
-		log.Printf("skipping - unable to fetch from %s - %v\n", url, err)
+		log.Printf("skipping - unable to crawl %s - %v\n", url, err)
 		return
 	}
 
-	log.Printf("found: %s\n", url)
+	if len(urls) == 0 {
+		return
+	}
+
+	var visitingUrls string
+	if len(urls) > MaxVisitingUrlsToPrint {
+		visitingUrls = fmt.Sprintf("%d links", len(urls))
+	} else {
+		visitingUrls = strings.Join(urls, ", ")
+	}
+	log.Printf("\twill try visiting: %s\n", visitingUrls)
 
 	var wg sync.WaitGroup
 	for _, u := range urls {
