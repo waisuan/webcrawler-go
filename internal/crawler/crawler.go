@@ -1,7 +1,6 @@
 package crawler
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"webcrawler-go/internal/fetcher"
@@ -28,11 +27,11 @@ func (c *Crawler) Run(url string) {
 
 	urls, err := c.fetcher.Fetch(url)
 	if err != nil {
-		log.Printf("unable to fetch from %s - %v\n", url, err)
+		log.Printf("skipping - unable to fetch from %s - %v\n", url, err)
 		return
 	}
 
-	fmt.Printf("found: %s\n", url)
+	log.Printf("found: %s\n", url)
 
 	var wg sync.WaitGroup
 	for _, u := range urls {

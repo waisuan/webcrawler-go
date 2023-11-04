@@ -8,10 +8,10 @@ import (
 )
 
 func TestCrawler_Run(t *testing.T) {
-	t.Run("happy path", func(t *testing.T) {
+	t.Run("when the starting URL has valid links", func(t *testing.T) {
 		f := fetcher.NewMockFetcher()
 		c := NewCrawler(f)
-		c.Run("http://golang.org/")
+		c.Run("https://monzo.com/")
 
 		require.NotEmpty(t, c.visited)
 
@@ -23,11 +23,21 @@ func TestCrawler_Run(t *testing.T) {
 		}
 
 		assert.ElementsMatch(t, []string{
-			"http://golang.org/",
-			"http://golang.org/cmd/",
-			"http://golang.org/pkg/",
-			"http://golang.org/pkg/fmt/",
-			"http://golang.org/pkg/os/",
+			"https://monzo.com/",
+			"https://monzo.com/current-account/",
+			"https://monzo.com/current-account/joint-account/",
+			"https://monzo.com/switch/",
+			"https://monzo.com/monzo-plus/",
+			"https://monzo.com/help/",
 		}, urls)
+	})
+
+	t.Run("when the starting URL has no valid links", func(t *testing.T) {
+		f := fetcher.NewMockFetcher()
+		c := NewCrawler(f)
+		c.Run("http://dummysite.com/")
+
+		assert.Len(t, c.visited, 1)
+		assert.True(t, c.visited["http://dummysite.com/"])
 	})
 }

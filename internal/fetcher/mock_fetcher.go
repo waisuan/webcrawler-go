@@ -10,39 +10,42 @@ type fakeResult struct {
 
 func NewMockFetcher() MockFetcher {
 	return MockFetcher{
-		"http://golang.org/": &fakeResult{
+		"https://monzo.com/": &fakeResult{
 			[]string{
-				"http://golang.org/pkg/",
-				"http://golang.org/cmd/",
+				"https://monzo.com/current-account/",
+				"https://monzo.com/monzo-plus/",
 			},
 		},
-		"http://golang.org/pkg/": &fakeResult{
+		"https://monzo.com/current-account/": &fakeResult{
 			[]string{
-				"http://golang.org/",
-				"http://golang.org/cmd/",
-				"http://golang.org/pkg/fmt/",
-				"http://golang.org/pkg/os/",
+				"https://monzo.com/",
+				"https://monzo.com/help/",
+				"https://monzo.com/current-account/joint-account/",
+				"https://monzo.com/switch/",
 			},
 		},
-		"http://golang.org/pkg/fmt/": &fakeResult{
+		"https://monzo.com/current-account/joint-account/": &fakeResult{
 			[]string{
-				"http://golang.org/",
-				"http://golang.org/pkg/",
+				"https://monzo.com/",
+				"https://monzo.com/current-account/",
 			},
 		},
-		"http://golang.org/pkg/os/": &fakeResult{
+		"https://monzo.com/switch/": &fakeResult{
 			[]string{
-				"http://golang.org/",
-				"http://golang.org/pkg/",
+				"https://monzo.com/",
+				"https://monzo.com/current-account/",
 			},
+		},
+		"https://monzo.com/monzo-plus/": &fakeResult{
+			[]string{},
 		},
 	}
 }
 
-func (f MockFetcher) Fetch(url string) ([]string, error) {
-	if res, ok := f[url]; ok {
+func (f MockFetcher) Fetch(targetUrl string) ([]string, error) {
+	if res, ok := f[targetUrl]; ok {
 		return res.urls, nil
 	}
 
-	return nil, fmt.Errorf("not found: %s", url)
+	return nil, fmt.Errorf("not found: %s", targetUrl)
 }
