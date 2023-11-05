@@ -44,5 +44,5 @@ The following are some of the action items that the developer would like to visi
 - Add sleep time in between crawls to be less disruptive towards and reduce load pressure on target sites.
 - Benchmark crawler to identify concurrency limits.
 - Add linter to enforce code quality.
-- Better error reporting mechanism -- for monitoring purpose. E.g. send runtime errors to DataDog where devs can easily build custom alarms around.
+- Better error reporting mechanism -- for monitoring purposes. E.g. send runtime errors to DataDog where devs can easily build custom alarms around.
 - Add custom telemetry around crawler behaviour -- helps to identify unhealthy system anomalies. E.g. send custom metrics to DataDog where devs can easily build custom dashboards around.
