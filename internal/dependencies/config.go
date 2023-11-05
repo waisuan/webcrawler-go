@@ -11,9 +11,9 @@ import (
 )
 
 type Config struct {
-	MaxCrawlConcurrencyLevel int `env:"MAX_CRAWL_CONCURRENCY_LEVEL" envDefault:"1000"`
-	MaxCrawlDepth            int `env:"MAX_CRAWL_DEPTH" envDefault:"-1"`
-	MaxLoggedUrls            int `env:"MAX_LOGGED_URLS" envDefault:"20"`
+	MaxCrawlConcurrencyLevel int `env:"MAX_CRAWL_CONCURRENCY_LEVEL" envDefault:"-1"` // Limit the no. of goroutines that can run at a time.
+	MaxCrawlDepth            int `env:"MAX_CRAWL_DEPTH" envDefault:"-1"`             // Limit the depth of pages/links the crawler should process.
+	MaxLoggedUrls            int `env:"MAX_LOGGED_URLS" envDefault:"20"`             // Limit the amount of pending links printed to the console.
 }
 
 func LoadEnv() *Config {

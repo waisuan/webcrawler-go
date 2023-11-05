@@ -3,11 +3,10 @@ package main
 import (
 	"flag"
 	"log"
-	"runtime"
 	"time"
+	"webcrawler-go/internal/crawler"
 	"webcrawler-go/internal/dependencies"
 	"webcrawler-go/internal/fetcher"
-	"webcrawler-go/internal/newcrawler"
 )
 
 func main() {
@@ -20,26 +19,30 @@ func main() {
 	}
 
 	// 👋 Enable for benchmarking purposes
-	t := time.Tick(time.Second)
-	go func() {
-		for {
-			select {
-			case <-t:
-				go func() {
-					log.Printf("No. of goroutines running: %d\n", runtime.NumGoroutine())
-				}()
-			}
-		}
-	}()
+	//t := time.Tick(time.Second)
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-t:
+	//			log.Printf("No. of goroutines running: %d\n", runtime.NumGoroutine())
+	//		}
+	//	}
+	//}()
 
 	start := time.Now()
 
 	f := fetcher.NewFetcher()
-	c := newcrawler.NewCrawler(cfg, f)
-	//c := crawler.NewCrawler(cfg, f)
-	c.Run(*arg, 1)
+	c := crawler.NewCrawler(cfg, f)
+
+	if cfg.MaxCrawlConcurrencyLevel > 0 {
+		log.Println("Running in BOUNDED mode...")
+		c.RunBounded(*arg, 1)
+	} else {
+		log.Println("Running in UNBOUNDED mode...")
+		c.RunUnbounded(*arg, 1)
+	}
 
 	end := time.Now()
 
-	log.Printf("✅ web-crawler took %v to complete.\n", end.Sub(start))
+	log.Printf("✅ web-crawler visited %d links and took %v to complete.\n", len(c.Visited), end.Sub(start))
 }
