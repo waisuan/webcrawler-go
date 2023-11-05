@@ -5,27 +5,28 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"webcrawler-go/internal/dependencies"
 	"webcrawler-go/internal/fetcher"
 )
 
-const MaxVisitingUrlsToPrint = 20
-
 type Crawler struct {
+	cfg     *dependencies.Config
 	fetcher fetcher.IFetcher
 	visited map[string]bool
 	lock    sync.Mutex
 }
 
-func NewCrawler(fetcher fetcher.IFetcher) *Crawler {
+func NewCrawler(cfg *dependencies.Config, fetcher fetcher.IFetcher) *Crawler {
 	return &Crawler{
+		cfg:     cfg,
 		fetcher: fetcher,
 		visited: make(map[string]bool),
 	}
 }
 
-func (c *Crawler) Run(url string) {
+func (c *Crawler) Run(url string, depth int) {
 	o := c.markAsVisited(url)
-	if !o {
+	if !o || (c.cfg.MaxCrawlDepth > 0 && depth >= c.cfg.MaxCrawlDepth) {
 		return
 	}
 
@@ -42,7 +43,7 @@ func (c *Crawler) Run(url string) {
 	}
 
 	var visitingUrls string
-	if len(urls) > MaxVisitingUrlsToPrint {
+	if len(urls) > c.cfg.MaxLoggedUrls {
 		visitingUrls = fmt.Sprintf("%d links", len(urls))
 	} else {
 		visitingUrls = strings.Join(urls, ", ")
@@ -54,7 +55,7 @@ func (c *Crawler) Run(url string) {
 		wg.Add(1)
 		go func(u string) {
 			defer wg.Done()
-			c.Run(u)
+			c.Run(u, depth+1)
 		}(u)
 	}
 	wg.Wait()
