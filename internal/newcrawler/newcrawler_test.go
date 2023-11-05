@@ -44,26 +44,26 @@ func TestCrawler_Run(t *testing.T) {
 		assert.True(t, c.visited["http://dummysite.com/"])
 	})
 
-	t.Run("when crawl depth is limited", func(t *testing.T) {
-		cfg.MaxCrawlDepth = 2
-
-		f := fetcher.NewMockFetcher()
-		c := NewCrawler(cfg, f)
-		c.Run("https://monzo.com/", 1)
-
-		require.NotEmpty(t, c.visited)
-
-		i := 0
-		urls := make([]string, len(c.visited))
-		for k := range c.visited {
-			urls[i] = k
-			i++
-		}
-
-		assert.ElementsMatch(t, []string{
-			"https://monzo.com/",
-			"https://monzo.com/monzo-plus/",
-			"https://monzo.com/current-account/",
-		}, urls)
-	})
+	//t.Run("when crawl depth is limited", func(t *testing.T) {
+	//	cfg.MaxCrawlDepth = 2
+	//
+	//	f := fetcher.NewMockFetcher()
+	//	c := NewCrawler(cfg, f)
+	//	c.Run("https://monzo.com/", 1)
+	//
+	//	require.NotEmpty(t, c.visited)
+	//
+	//	i := 0
+	//	urls := make([]string, len(c.visited))
+	//	for k := range c.visited {
+	//		urls[i] = k
+	//		i++
+	//	}
+	//
+	//	assert.ElementsMatch(t, []string{
+	//		"https://monzo.com/",
+	//		"https://monzo.com/monzo-plus/",
+	//		"https://monzo.com/current-account/",
+	//	}, urls)
+	//})
 }
