@@ -29,7 +29,7 @@ Limit the depth of pages/links the crawler should process. This is useful for in
 
 `MAX_LOGGED_URLS`
 
-Limit the amount of pending links printed to the console. E.g. "will try visiting: <url1>, <url2>, ..." -> "will try visiting: 500 links"
+Limit the amount of pending links printed to the console. E.g. "will try visiting: URL1, URL2, ..." -> "will try visiting: 500 links"
 
 # Future State
 
