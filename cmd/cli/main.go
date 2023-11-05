@@ -5,9 +5,9 @@ import (
 	"log"
 	"runtime"
 	"time"
-	"webcrawler-go/internal/crawler"
 	"webcrawler-go/internal/dependencies"
 	"webcrawler-go/internal/fetcher"
+	"webcrawler-go/internal/newcrawler"
 )
 
 func main() {
@@ -19,13 +19,15 @@ func main() {
 		log.Fatal("web-crawler needs a starting URL")
 	}
 
-	// TODO: remove after testing
+	// 👋 Enable for benchmarking purposes
 	t := time.Tick(time.Second)
 	go func() {
 		for {
 			select {
 			case <-t:
-				go watching()
+				go func() {
+					log.Printf("No. of goroutines running: %d\n", runtime.NumGoroutine())
+				}()
 			}
 		}
 	}()
@@ -33,14 +35,11 @@ func main() {
 	start := time.Now()
 
 	f := fetcher.NewFetcher()
-	c := crawler.NewCrawler(cfg, f)
+	c := newcrawler.NewCrawler(cfg, f)
+	//c := crawler.NewCrawler(cfg, f)
 	c.Run(*arg, 1)
 
 	end := time.Now()
 
 	log.Printf("✅ web-crawler took %v to complete.\n", end.Sub(start))
-}
-
-func watching() {
-	log.Printf("No. of goroutines running: %d\n", runtime.NumGoroutine())
 }
