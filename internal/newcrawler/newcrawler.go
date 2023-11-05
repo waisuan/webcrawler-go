@@ -24,11 +24,6 @@ type Crawler struct {
 	lock    sync.Mutex
 }
 
-type CrawlUrlJob struct {
-	url   string
-	depth int
-}
-
 func NewCrawler(cfg *dependencies.Config, fetcher fetcher.IFetcher) *Crawler {
 	return &Crawler{
 		cfg:     cfg,
@@ -38,26 +33,36 @@ func NewCrawler(cfg *dependencies.Config, fetcher fetcher.IFetcher) *Crawler {
 }
 
 func (c *Crawler) Run(url string, depth int) {
-	worker := func(ctx context.Context, targetUrlCh <-chan string, pendingUrlsCh chan<- []string) {
+	type crawlJob struct {
+		url   string
+		depth int
+	}
+
+	type pendingJob struct {
+		urls  []string
+		depth int
+	}
+
+	worker := func(ctx context.Context, targetUrlCh <-chan *crawlJob, pendingUrlsCh chan<- *pendingJob) {
 		defer wg.Done()
 
 	loop:
 		for {
 			select {
-			case url := <-targetUrlCh:
+			case job := <-targetUrlCh:
 				work.Add(1)
 
-				o := c.markAsVisited(url)
-				if !o {
+				o := c.markAsVisited(job.url)
+				if !o || (c.cfg.MaxCrawlDepth > 0 && job.depth >= c.cfg.MaxCrawlDepth) {
 					work.Add(-1)
 					continue
 				}
 
-				log.Printf("visited: %s\n", url)
+				log.Printf("visited: %s\n", job.url)
 
-				urls, err := c.fetcher.Fetch(url)
+				urls, err := c.fetcher.Fetch(job.url)
 				if err != nil {
-					log.Printf("skipping - unable to crawl %s - %v\n", url, err)
+					log.Printf("skipping - unable to crawl %s - %v\n", job.url, err)
 					work.Add(-1)
 					continue
 				}
@@ -75,7 +80,7 @@ func (c *Crawler) Run(url string, depth int) {
 				}
 				log.Printf("\twill try visiting: %s\n", visitingUrls)
 
-				pendingUrlsCh <- urls
+				pendingUrlsCh <- &pendingJob{urls: urls, depth: job.depth + 1}
 
 				work.Add(-1)
 			case <-ctx.Done():
@@ -84,16 +89,16 @@ func (c *Crawler) Run(url string, depth int) {
 		}
 	}
 
-	crawl := func(terminator context.CancelFunc, targetUrlCh chan<- string, pendingUrlsCh chan []string) {
+	crawl := func(terminator context.CancelFunc, targetUrlCh chan<- *crawlJob, pendingUrlsCh chan *pendingJob) {
 	loop:
 		for {
 			select {
-			case pendingUrls := <-pendingUrlsCh:
-				for _, u := range pendingUrls {
-					targetUrlCh <- u
+			case job := <-pendingUrlsCh:
+				for _, u := range job.urls {
+					targetUrlCh <- &crawlJob{url: u, depth: job.depth}
 				}
 				continue
-			case <-time.After(5 * time.Second): // helps to terminate all workers when there's nothing left to process.
+			case <-time.After(3 * time.Second): // helps to terminate all workers when there's nothing left to process.
 				log.Printf("searching for more links to process...(%d)\n", work.Load())
 				if work.Load() <= 0 {
 					break loop
@@ -104,10 +109,10 @@ func (c *Crawler) Run(url string, depth int) {
 		terminator()
 	}
 
-	targetUrlCh := make(chan string)
+	targetUrlCh := make(chan *crawlJob)
 	defer close(targetUrlCh)
 
-	pendingUrlsCh := make(chan []string, 10_000) // Buffered channel to limit the no. of pending unprocessed links at a time.
+	pendingUrlsCh := make(chan *pendingJob, 10_000) // Buffered channel to limit the no. of pending unprocessed links at a time.
 	defer close(pendingUrlsCh)
 
 	ctx, terminator := context.WithCancel(context.Background())
@@ -119,7 +124,7 @@ func (c *Crawler) Run(url string, depth int) {
 
 	go crawl(terminator, targetUrlCh, pendingUrlsCh)
 
-	pendingUrlsCh <- []string{url}
+	pendingUrlsCh <- &pendingJob{urls: []string{url}, depth: depth}
 
 	wg.Wait()
 }
